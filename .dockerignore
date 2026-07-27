@@ -1,0 +1,12 @@
+.git
+.gitignore
+docs
+scripts
+tests
+Ques.md
+README.md
+compose.yaml
+Dockerfile
+*.log
+.DS_Store
+
