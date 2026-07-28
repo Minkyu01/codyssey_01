@@ -2,14 +2,22 @@ services:
   web:
     build:
       context: .
-    image: workstation-web:1.0
-    container_name: workstation-web
+    image: workstation-web:1.0 # 이미지 태그 
+    container_name: workstation-web # 컨테이너 이름
     ports:
-      - "${HOST_PORT:-8080}:80"
+      - "8080:80"
     volumes:
-      - workstation-data:/usr/share/nginx/html/data
+      - popyou:/usr/share/nginx/html/data
     restart: unless-stopped
 
+  backend:
+    build:
+      context: ./backend
+    image: workstation-backend:1.0
+    container_name: workstation-backend
+    expose:
+      - "8000"
+
 volumes:
-  workstation-data:
+  popyou:
 
