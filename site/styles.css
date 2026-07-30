@@ -63,14 +63,14 @@ h3 { margin-bottom: var(--space-2); font-size: var(--text-lg); }
 .intro-copy { max-width: 760px; margin-bottom: 0; color: var(--color-text-muted); }
 .runtime { min-width: 0; padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--shadow-card); }
 .runtime-label { display: block; margin-bottom: var(--space-2); color: var(--color-text-muted); font-size: var(--text-sm); }
-.runtime code { display: block; max-width: 100%; overflow-x: auto; color: var(--color-primary); font-weight: 700; white-space: nowrap; }
+.runtime code { display: block; max-width: 100%; color: var(--color-primary); font-weight: 700; overflow-wrap: anywhere; white-space: normal; }
 .section-heading { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-5); }
 .badge { padding: var(--space-1) var(--space-3); border-radius: 999px; color: var(--color-accent); background: #ccfbf1; font-size: var(--text-sm); font-weight: 600; }
 .flow-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); margin: 0; padding: 0; list-style: none; }
 .flow-card { min-width: 0; padding: var(--space-5); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--shadow-card); }
 .flow-card p { color: var(--color-text-muted); }
 .step { display: block; margin-bottom: var(--space-4); color: var(--color-primary); font-weight: 800; }
-.command { display: block; width: 100%; max-width: 100%; overflow-x: auto; padding: var(--space-3); border-radius: var(--radius-sm); color: #dbeafe; background: #172033; font-size: var(--text-sm); white-space: nowrap; }
+.command { display: block; width: 100%; max-width: 100%; padding: var(--space-3); border-radius: var(--radius-sm); color: #dbeafe; background: #172033; font-size: var(--text-sm); overflow-wrap: anywhere; white-space: normal; }
 .check-panel { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: var(--space-5); padding: var(--space-6); border: 1px solid #bfdbfe; border-radius: var(--radius-lg); background: #eff6ff; }
 .check-panel p:last-child { margin-bottom: 0; color: var(--color-text-muted); }
 .button { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; padding-inline: var(--space-4); border-radius: var(--radius-md); color: white; background: var(--color-primary); font-weight: 700; text-decoration: none; }

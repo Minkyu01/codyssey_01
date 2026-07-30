@@ -4,9 +4,11 @@ docs
 scripts
 tests
 Ques.md
+purpose.md
 README.md
+README.previous.md
+TODO.md
 compose.yaml
 Dockerfile
 *.log
 .DS_Store
-

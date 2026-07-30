@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Docker 이미지, 컨테이너, 포트, 스토리지의 관계를 확인하는 워크스테이션 실습 페이지" />
     <title>Docker Workstation Lab</title>
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/styles.css?v=20260730" />
   </head>
   <body data-source="image">
     <header class="app-header">
@@ -24,13 +24,13 @@
           <p class="eyebrow">AI/SW 개발 워크스테이션 구축</p>
           <h1 id="page-title">컨테이너의 연결 지점을 직접 확인하세요</h1>
           <p class="intro-copy">
-            이 페이지는 커스텀 Docker 이미지에서 제공됩니다. 호스트의 8080 포트는
+            이 페이지는 커스텀 Docker 이미지에서 제공됩니다. 호스트에 공개한 포트는
             컨테이너의 80 포트로 연결되고, 데이터 디렉터리는 Docker 볼륨으로 분리할 수 있습니다.
           </p>
         </div>
         <aside class="runtime" aria-label="현재 실행 구성">
           <span class="runtime-label">현재 요청 경로</span>
-          <code>localhost:8080 → container:80</code>
+          <code>localhost:&lt;host_port&gt; → container:80</code>
         </aside>
       </section>
 
@@ -54,7 +54,7 @@
             <span class="step">02</span>
             <h3>컨테이너 실행</h3>
             <p>이미지에서 격리된 프로세스를 만들고 호스트 포트를 연결합니다.</p>
-            <code class="command">docker run -p 8080:80 workstation-web:1.0</code>
+            <code class="command">docker run -p &lt;host_port&gt;:80 workstation-web:1.0</code>
           </li>
           <li class="flow-card">
             <span class="step">03</span>
@@ -69,7 +69,7 @@
         <div>
           <p class="eyebrow">검증 기준</p>
           <h2 id="check-title">응답을 받았다면 포트 매핑이 동작합니다</h2>
-          <p><code>curl http://localhost:8080/healthz</code>의 결과가 <code>ok</code>인지 확인하세요.</p>
+          <p><code>curl http://localhost:&lt;host_port&gt;/healthz</code>의 결과가 <code>ok</code>인지 확인하세요.</p>
         </div>
         <a class="button" href="/healthz">헬스체크 열기</a>
       </section>
@@ -77,10 +77,9 @@
 
     <footer>
       <div class="container footer-content">
-        <span>Codyssey Piscine 00</span>
+        <span>Codyssey ex01</span>
         <span>Base image: nginx:1.27.5-alpine</span>
       </div>
     </footer>
   </body>
 </html>
-
