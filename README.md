@@ -1,9 +1,3 @@
-# ex01 · 재현 가능한 Docker 개발 워크스테이션
-
-`nginx:1.27.5-alpine`을 기반으로 정적 웹 서버 이미지를 만들고, 터미널·파일 권한·Docker 운영·포트 매핑·바인드 마운트·볼륨 영속성·Git/GitHub 연결을 **실제 명령과 결과로 검증한 과제**입니다.
-
-> 현재 상태: 필수 요구사항 19개 중 `PASS 17`, `PARTIAL 2`, `FAIL 0`입니다. 로컬 구현과 자동 검증은 완료했습니다. 제출 전 사용자가 VS Code의 GitHub 로그인 화면을 개인정보 없이 캡처하고, 최종 변경을 검토·커밋·푸시해야 합니다. 상세 판정은 [요구사항 추적표](docs/evidence/requirements.md)를 참고합니다.
-
 ## 1. 프로젝트 목표
 
 - 터미널에서 파일과 디렉터리를 만들고 이동·복사·삭제할 수 있습니다.
@@ -696,233 +690,127 @@ Docker volume persistence test
 
 
 
+## 9 Docker compose 
+여러개의 도커 파일들들과 컨테이너들의 구조들을 쉽게 구성하게 도와준다. 각각의 도커 컨테이너들을 직접 수행하게 되면 
 
+``` bash
+services:
+  web:
+    build:
+      context: .
+    image: workstation-web:1.0
+    container_name: workstation-web
+    ports:
+      - "${HOST_PORT:-8080}:80"
+    volumes:
+      - workstation-data:/usr/share/nginx/html/data
+    restart: unless-stopped
 
-
-
-
-
-
-
-
-
-
-
-## 5. 커스텀 이미지 설계
-
-| 구성 | 적용 내용 | 목적 |
-|---|---|---|
-| 베이스 | `nginx:1.27.5-alpine` | 검증된 웹 서버를 작은 Linux 이미지에서 사용 |
-| 메타데이터 | OCI 라벨, `APP_ENV=learning` | 이미지 목적과 학습 환경 표시 |
-| NGINX 설정 | `nginx/default.conf` 복사 | 정적 파일 fallback과 `/healthz` 제공 |
-| 웹 콘텐츠 | `site/` 복사 | 기본 NGINX 화면을 프로젝트 화면으로 교체 |
-| 데이터 경로 | `/usr/share/nginx/html/data` | 이름 있는 볼륨을 연결할 위치 제공 |
-| 권한 | 정적 루트를 `nginx:nginx`로 설정 | NGINX 사용자의 파일 접근을 명시 |
-| 포트 | `EXPOSE 80` | 이미지가 사용하는 컨테이너 포트 문서화 |
-| 상태 점검 | `HEALTHCHECK`에서 `/healthz` 호출 | 프로세스 실행과 HTTP 준비 상태를 구분 |
-| 보안 헤더 | `nosniff`, `SAMEORIGIN` | MIME 스니핑과 불필요한 iframe 삽입 완화 |
-
-`EXPOSE 80`은 포트 사용 의도를 기록할 뿐입니다. 호스트에서 접속하려면 실행 시 `-p <host-port>:80`으로 포트를 실제 게시해야 합니다.
-
-## 6. 빠른 실행
-
-프로젝트 루트에서 실행합니다. 기존 서비스와 충돌을 피하려고 예시는 호스트 포트 `18080`을 사용합니다.
-
-```bash
-docker build -t ex01-workstation:1.0 .
-
-docker run -d \
-  --name ex01-workstation-local \
-  -p 127.0.0.1:18080:80 \
-  -v ex01-workstation-data:/usr/share/nginx/html/data \
-  ex01-workstation:1.0
+volumes:
+  workstation-data:
 ```
 
-컨테이너가 `healthy`가 될 때까지 상태를 확인한 뒤 웹과 헬스체크를 호출합니다.
+#### 실행 병령어
+``` bash
+# docker compose 문법 검사
+$ docker compose config
 
-```bash
-docker ps --filter name=ex01-workstation-local
-curl -fsS http://127.0.0.1:18080/healthz
-curl -fsS http://127.0.0.1:18080/ | grep -F 'Docker Workstation Lab'
+# 빌드 및 실행
+$ docker compose up -d --build
+
+# 실행중인 프로세스 확인
+$ docker compose ps
+
+# 로깅
+$ $ docker compose logs web
+ok
+
+# 컨테이너 내부 실행
+$ docker compose exec web sh
+
+# 서비스 종료
+$ docker compose down
+
+# 볼륨 삭제 
+$ docker compose down -v
+```
+전체 과정 요약
+
+```
+up으로 실행
+    ↓
+ps로 상태 확인
+    ↓
+logs로 내부 동작 확인
+    ↓
+down으로 종료
 ```
 
-예상 핵심 결과:
+#### 환경 변수 활용
+환경 변수 사용하는 흐름
+``` text
+동일한 코드·동일한 이미지
+          +
+실행할 때 환경 변수만 변경
+          ↓
+서로 다른 포트·실행 모드로 동작
+```
+
+```  yaml
+services:
+  web:
+    ports:
+      - "${HOST_PORT:-8080}:80"
+```
+- HOST_PORT가 정의되어 있지 않다면 8080을 사용한다
+
+
+환경변수 주입
+``` bash
+HOST_PORT=18080 docker compose up -d
+```
+
+#### .env 파일 활용
+기본적으로 docker compose파일은 같은 위치 디렉터리의 .env를 읽는다. 
 
 ```text
-STATUS: Up ... (healthy)
-PORTS: 127.0.0.1:18080->80/tcp
-ok
-Docker Workstation Lab
+# 호스트에서 접속할 포트
+HOST_PORT=18080
+
+# 애플리케이션 실행 모드
+APP_ENV=production
 ```
 
-브라우저에서 `http://127.0.0.1:18080`을 엽니다. 실습이 끝나면 이 예시가 만든 자원만 정리합니다.
 
-```bash
-docker rm -f ex01-workstation-local
-docker volume rm ex01-workstation-data
-docker image rm ex01-workstation:1.0
-```
+- 전체 검증 과정
+``` bash
+# 1. 기본 환경 변수 값으로 서비스를 실행한다.
+docker compose up -d --build
 
-빈 디렉터리에서 파일 작성부터 다시 수행하려면 [재구성 가이드](docs/getting-started.md)를 사용합니다.
+# 2. 기본 포트 8080이 적용됐는지 확인한다.
+docker compose ps
 
-### Docker Compose
+# 3. Dockerfile의 기본 실행 모드를 확인한다.
+docker compose exec web printenv APP_ENV
 
-`compose.yaml`은 단일 `web` 서비스와 `workstation-data` 볼륨을 선언합니다. 기본 포트는 `8080`이며 `HOST_PORT`로 바꿀 수 있습니다.
+# 4. 기본 포트의 HTTP 응답을 확인한다.
+curl -fsS http://127.0.0.1:8080/healthz
 
-```bash
-HOST_PORT=18080 docker compose config
-HOST_PORT=18080 docker compose up -d --build
+# 5. 기존 서비스를 종료한다.
+docker compose down
+
+# 6. 호스트 포트를 18080으로 변경하여 실행한다.
+HOST_PORT=18080 docker compose up -d
+
+# 7. 변경된 포트가 적용됐는지 확인한다.
 HOST_PORT=18080 docker compose ps
-HOST_PORT=18080 docker compose logs --tail 20 web
+
+# 8. 테스트가 끝난 서비스를 정리한다.
 HOST_PORT=18080 docker compose down
 ```
 
-같은 이름의 `workstation-web` 컨테이너가 이미 있다면 먼저 그 컨테이너의 용도를 확인합니다. 다른 사용자의 자원이나 필요한 데이터를 확인하지 않고 삭제하지 않습니다.
 
-## 7. 자동 검증
 
-### 정적 검사
-
-필수 파일, 실행 권한, Bash·zsh 구문, Dockerfile·NGINX 패턴, Compose 해석, Python 구문, 모든 Markdown 링크를 검사합니다.
-
-```bash
-./tests/static_check.sh
-```
-
-최종 실행 결과:
-
-```text
-PASS: bash syntax
-PASS: zsh syntax
-PASS: docker compose config
-PASS: backend/server.py AST parse
-PASS: all local Markdown links and referenced scripts resolve
-PASS: static verification completed (36 checks)
-```
-
-### 터미널·권한 검사
-
-고유한 임시 디렉터리에서만 파일을 만들고 종료 시 삭제합니다.
-
-```bash
-./scripts/terminal_permissions.sh
-```
-
-실제 핵심 출력:
-
-```text
-$ chmod 644 permission-file.txt
--rw-r--r--  ... permission-file.txt
-$ chmod 640 permission-file.txt
--rw-r-----  ... permission-file.txt
-
-$ chmod 755 permission-dir
-drwxr-xr-x  ... permission-dir
-$ chmod 750 permission-dir
-drwxr-x---  ... permission-dir
-
-PASS: terminal operations and file/directory permission changes completed
-cleanup: temporary terminal practice removed
-```
-
-### Docker 통합 검사
-
-아래 스크립트는 포트와 자원 이름의 충돌을 먼저 검사합니다. 새 이미지 빌드, 포트·헬스체크, 운영 명령, 중지·재시작, 바인드 마운트, 볼륨 영속성을 확인한 뒤 **자신이 만든 자원만** 자동 정리합니다.
-
-```bash
-VERIFY_RUN_ID=local \
-HOST_PORT=38080 \
-BIND_PORT=38081 \
-./scripts/verify.sh
-```
-
-2026년 7월 30일의 실제 핵심 결과:
-
-```text
-health=healthy container=codex-ex01-web-docs-20260730
-HTTP 200 body=ok url=http://127.0.0.1:38080/healthz
-HTTP 200 root page contains: Docker Workstation Lab
-after-stop name=codex-ex01-web-docs-20260730 status=Exited (0) ...
-HTTP 200 body=bind-before-docs-20260730 url=http://127.0.0.1:38081/
-HTTP 200 body=bind-after-docs-20260730 url=http://127.0.0.1:38081/
-before-delete=volume-persists-docs-20260730
-after-delete-and-recreate=volume-persists-docs-20260730
-PASS: build, health, localhost port mapping, operations, stop/start, bind mount, and volume persistence
-cleanup complete
-```
-
-전체 명령과 출력은 [Docker 통합 검증 로그](docs/evidence/docker-verification.md)에 있습니다.
-
-## 8. 실행 증거
-
-### 주소창을 포함한 포트 매핑
-
-호스트의 `127.0.0.1:38082`를 컨테이너의 `80` 포트에 매핑해 최종 화면을 확인했습니다.
-
-![127.0.0.1:38082 주소창과 Docker Workstation Lab 화면](docs/images/browser-address-bar.png)
-
-```console
-$ docker inspect --format \
-    'status={{.State.Status}} health={{.State.Health.Status}} ports={{json .NetworkSettings.Ports}}' \
-    codex-ex01-browser-20260730
-status=running health=healthy ports={"80/tcp":[{"HostIp":"127.0.0.1","HostPort":"38082"}]}
-
-$ curl -fsS http://127.0.0.1:38082/healthz
-ok
-```
-
-[데스크톱 화면](docs/images/web-desktop.png)과 [390px 모바일 화면](docs/images/web-mobile.png)에서도 페이지 가로 넘침이나 긴 명령 잘림이 없는지 확인했습니다. 자세한 측정값은 [UI 검증 기록](docs/evidence/ui-verification.md)에 있습니다.
-
-### 터미널과 권한
-
-[`scripts/terminal_permissions.sh`](scripts/terminal_permissions.sh)를 실행해 기본 조작과 권한 변경 전·후를 확인했습니다. 명령·출력 원문은 [터미널·권한 로그](docs/evidence/terminal-permissions.md)에 있습니다.
-
-### `hello-world`, Ubuntu와 실행 방식
-
-```console
-$ docker run --rm hello-world
-Hello from Docker!
-This message shows that your installation appears to be working correctly.
-
-$ docker run --rm ubuntu:24.04 \
-    sh -lc 'echo foreground-ok; pwd; ls -1 / | head -n 5'
-foreground-ok
-/
-bin
-boot
-dev
-etc
-home
-```
-
-전경 `docker run`은 현재 터미널을 컨테이너의 주 프로세스에 연결합니다. `-d`는 주 프로세스를 백그라운드에서 유지하고, `docker exec`는 실행 중인 컨테이너 안에 **새 명령**을 실행합니다. `docker attach`는 새 명령을 만드는 대신 기존 주 프로세스의 입출력에 연결합니다. 전체 로그는 [기본 컨테이너 검증](docs/evidence/container-basics.md)에 있습니다.
-
-### 바인드 마운트와 볼륨
-
-```text
-bind mount:
-  호스트 파일 변경 전  -> bind-before-docs-20260730
-  호스트 파일 변경 후  -> bind-after-docs-20260730
-
-named volume:
-  첫 컨테이너 삭제 전  -> volume-persists-docs-20260730
-  새 컨테이너 생성 후  -> volume-persists-docs-20260730
-```
-
-바인드 마운트는 지정한 호스트 경로를 컨테이너에 직접 연결하므로 소스 변경 확인에 적합합니다. Docker 볼륨은 Docker가 관리하며 컨테이너의 생명주기와 분리되므로 영속 데이터에 적합합니다.
-
-## 9. 증거 문서 색인
-
-| 확인 대상 | 상세 기록 |
-|---|---|
-| 필수 19개 최종 판정 | [요구사항 추적표](docs/evidence/requirements.md) |
-| OS·터미널·Docker·Git 버전 | [실행 환경](docs/evidence/environment.md) |
-| CLI와 파일·디렉터리 권한 | [터미널·권한](docs/evidence/terminal-permissions.md) |
-| `hello-world`, Ubuntu, 전경·분리 실행 | [기본 컨테이너](docs/evidence/container-basics.md) |
-| 빌드·포트·로그·stats·바인드·볼륨 | [Docker 통합 검증](docs/evidence/docker-verification.md) |
-| 주소창·데스크톱·모바일 화면 | [웹 UI 검증](docs/evidence/ui-verification.md) |
-| Git 설정과 공개 GitHub 원격 | [Git·GitHub](docs/evidence/git-github.md) |
-| 사용자만 완료할 수 있는 증거 | [VS Code 캡처와 최종 푸시](docs/evidence/manual-evidence.md) |
 
 ## 10. 트러블슈팅
 
@@ -931,12 +819,3 @@ named volume:
 1. `docker ps`에는 보이지 않는 중지 컨테이너가 이미지를 참조해 이미지 삭제가 실패했습니다. `docker ps -a`로 대상을 확인하고 해당 컨테이너만 삭제한 뒤 해결했습니다.
 2. 컨테이너 ID가 반환된 직후 `curl`이 종료 코드 52를 반환했습니다. 프로세스 시작과 서비스 준비 완료가 다름을 확인하고 `/healthz`에 제한 시간이 있는 재시도를 적용했습니다.
 
-## 11. 보안과 재현성
-
-- 포트는 과제 검증에 필요한 로컬 인터페이스 `127.0.0.1`에만 게시했습니다.
-- Git 이메일은 값 대신 설정 여부만 기록했습니다.
-- 브라우저 화면은 계정 정보가 없는 별도 프로필에서 캡처했습니다.
-- 토큰, 비밀번호, 개인키, 인증 코드는 문서와 이미지에 넣지 않습니다.
-- 검증 스크립트는 실행 전 포트·이름 충돌을 검사하고, 자신이 만든 자원만 정리합니다.
-- 개인 절대 경로는 로그에서 `<project-root>`, `<temporary-directory>`처럼 일반화했습니다.
-- 사용자 계정이 필요한 VS Code 로그인과 외부 상태를 바꾸는 최종 푸시는 자동으로 수행하지 않았습니다.
