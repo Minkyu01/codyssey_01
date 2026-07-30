@@ -4,11 +4,17 @@ services:
       context: .
     image: workstation-web:1.0
     container_name: workstation-web
+    depends_on:
+      - backend
     ports:
       - "${HOST_PORT:-8080}:80"
     volumes:
       - workstation-data:/usr/share/nginx/html/data
     restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
 
 volumes:
   workstation-data:

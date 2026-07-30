@@ -233,7 +233,6 @@ git config --list
 user.name="GitHub 사용자명"
 user.email="GitHub 이메일"
 
-
 # 프로젝트 저장소 초기화
 cd 프로젝트경로
 git init -b main
@@ -251,16 +250,7 @@ git push -u origin main
 
 # 연동 검증
 git remote -v
-git branch -vv
 git status
-git ls-remote --heads origin
-```
-
-- git config 명령어 전체 확인
-
-``` bash
-git config --list
-
 ```
 
 
@@ -435,7 +425,6 @@ EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 ```
 
-
 | 명령어 | 설명 |
 |---|---|
 | `FROM nginx:alpine` | Nginx Alpine 이미지를 기반으로 사용 |
@@ -445,6 +434,15 @@ CMD ["nginx", "-g", "daemon off;"]
 | `HEALTHCHECK` | 웹 서버의 응답 상태를 주기적으로 검사 |
 | `EXPOSE 80` | 컨테이너가 80번 포트를 사용함을 명시 |
 | `CMD` | 컨테이너 시작 시 Nginx 실행 |
+
+#### nginx 이미지 선택 이유 
+| 선택 항목 | 이유 |
+|---|---|
+| 공식 NGINX 이미지 | NGINX가 이미 설치되고 기본 실행 설정이 구성되어 있음 |
+| Alpine Linux | 일반 Linux 이미지보다 크기가 작고 구성이 단순함 |
+| `1.27.5` 버전 고정 | `latest`처럼 버전이 바뀌지 않아 동일 환경을 재현하기 쉬움 |
+| 정적 웹 서버 | HTML, CSS 파일을 서비스하는 현재 프로젝트에 적합 |
+
 
 #### 도커 운영 검증 로그
 
@@ -533,27 +531,89 @@ b5076ac1d50b   nginx-running   0.00%   7.68MiB / 7.808GiB   0.10%   830B / 126B 
 
 ```
 
+#### 빌드·실행 명령 및 핵심 결과
+
+빌드 및 실행
+
+```bash
+$ HOST_PORT=38082 docker compose up -d --build
+codyssey_01-backend  Built
+workstation-web:1.0  Built
+Container codyssey_01-backend-1  Running
+Container workstation-web  Started
+```
+
+실행 상태
+
+```bash
+$ HOST_PORT=38082 docker compose ps
+NAME                    IMAGE                 SERVICE   STATUS                    PORTS
+codyssey_01-backend-1   codyssey_01-backend   backend   Up                        8000/tcp
+workstation-web         workstation-web:1.0   web       Up (healthy)              0.0.0.0:38082->80/tcp
+```
+
+- curl로 테스트 및 접속 결과
+
+```bash
+$ curl -i http://127.0.0.1:38082/healthz
+HTTP/1.1 200 OK
+Server: nginx/1.27.5
+Content-Type: text/plain
+
+ok
+```
+
+## 브라우저 접속 화면
+
+![127.0.0.1:38082 포트 매핑 접속 성공](images/browser-address-bar.png)
+
+주소창의 `127.0.0.1:38082`와 웹페이지가 함께 표시되므로 브라우저 접속 성공 증거로 사용할 수 있습니다.
+
+
 
 #### 포트 매핑이 필요한 이유 
 Docker 컨테이너는 호스트 컴퓨터와 분리된 네트워크 환경에서 실행됩니다. 
-``` bash
-호스트 컴퓨터                 Docker 컨테이너
-localhost:8080  ──────────▶  컨테이너:80
+
+```text
+호스트 127.0.0.1:38082 ─────▶ 컨테이너:80
 ```
 
-- 포트 매핑 명령어
-``` bash 
-docker run -d --name nginx-running -p 8080:80 nginx
+빌드 및 실행:
 
--p 호스트_포트:컨테이너_포트
--p 8080:80
+```bash
+$ HOST_PORT=38082 docker compose up -d --build
+codyssey_01-backend  Built
+workstation-web:1.0  Built
+Container codyssey_01-backend-1  Running
+Container workstation-web  Started
 ```
+
+- 포트 매핑 접속 증거:
+
+```bash 
+$ docker run -d --name workstation-web-port-proof --network codyssey_01_default -p 127.0.0.1:38082:80 workstation-web:1.0
+58e9ed8414485d213a34b36b305f724a81fb21d69a36f5a06fc1096d2f6f580b
+
+$ docker ps --filter name=workstation-web-port-proof
+NAMES                        STATUS                    PORTS
+workstation-web-port-proof   Up 13 seconds (healthy)   127.0.0.1:38082->80/tcp
+
+$ curl -i http://127.0.0.1:38082/healthz
+HTTP/1.1 200 OK
+Server: nginx/1.27.5
+
+ok
+```
+
+![127.0.0.1:38082 포트 매핑 접속 성공](images/browser-address-bar.png)
+
 
 #### EXPOSE와 -p의 차이
 | 구분 | 역할 |
 |---|---|
 | `EXPOSE 80` | 이미지가 80번 포트를 사용한다고 문서화 |
-| `-p 8080:80` | 호스트와 컨테이너 포트를 실제로 연결 |
+| `-p 38082:80` | 호스트와 컨테이너 포트를 실제로 연결 |
+
 
 
 
@@ -678,10 +738,6 @@ $ docker run --rm \
 Docker volume persistence test
 ```
 
-
-
-
-
 ## 9 Docker compose 
 여러개의 도커 파일들들과 컨테이너들의 구조들을 쉽게 구성하게 도와준다. 각각의 도커 컨테이너들을 직접 수행하게 되면 
 
@@ -786,7 +842,7 @@ docker compose ps
 docker compose exec web printenv APP_ENV
 
 # 4. 기본 포트의 HTTP 응답을 확인한다.
-curl -fsS http://127.0.0.1:8080/healthz
+curl -fsS http://127.0.0.1:8080/
 
 # 5. 기존 서비스를 종료한다.
 docker compose down
@@ -810,4 +866,3 @@ HOST_PORT=18080 docker compose down
 
 1. `docker ps`에는 보이지 않는 중지 컨테이너가 이미지를 참조해 이미지 삭제가 실패했습니다. `docker ps -a`로 대상을 확인하고 해당 컨테이너만 삭제한 뒤 해결했습니다.
 2. 컨테이너 ID가 반환된 직후 `curl`이 종료 코드 52를 반환했습니다. 프로세스 시작과 서비스 준비 완료가 다름을 확인하고 `/healthz`에 제한 시간이 있는 재시도를 적용했습니다.
-
