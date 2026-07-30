@@ -241,6 +241,7 @@ git config --global user.email "GitHub 이메일"
 # Git 설정 확인
 git config --list
 
+
 # GitHub 로그인
 gh auth login
 
