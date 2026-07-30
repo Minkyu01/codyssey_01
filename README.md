@@ -230,13 +230,9 @@ git config --global user.email "GitHub 이메일"
 
 # Git 설정 확인
 git config --list
+user.name="GitHub 사용자명"
+user.email="GitHub 이메일"
 
-
-# GitHub 로그인
-gh auth login
-
-# 로그인 상태 확인
-gh auth status
 
 # 프로젝트 저장소 초기화
 cd 프로젝트경로
