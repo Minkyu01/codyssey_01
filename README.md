@@ -14,19 +14,15 @@
 | 터미널 기본 조작 | [ ] | `pwd`, `ls -la`, `cd`, `mkdir`, `touch`, `cat`, `cp`, `mv`, `rm` 실행 |
 | 파일·디렉터리 권한 | [ ] | 파일 `644 → 640`, 디렉터리 `755 → 750` 비교 |
 | Docker 설치·Engine | [ ] | CLI와 Engine 29.4.1 응답 확인 |
-| 이미지·컨테이너 운영 | [ ] | build/images/run/ps/ps-a/logs/stats/stop/start 실행 |
 | 기본 컨테이너 | [ ] | `hello-world`, Ubuntu 전경·분리 실행과 `exec` 확인 |
-| 커스텀 Dockerfile | [ ] | NGINX 설정·정적 화면·헬스체크를 포함한 이미지 빌드 |
+| 커스텀 Dockerfile | [ ] | NGINX 설정·정적 화면을 포함한 이미지 빌드 |
 | 포트 매핑 | [ ] | `127.0.0.1:38080 → 80`, HTTP 200과 브라우저 화면 확인 |
-| 바인드 마운트 | [ ] | `bind-before → bind-after` 즉시 반영 |
 | Docker 볼륨 | [ ] | 첫 컨테이너 삭제 후 두 번째 컨테이너에서 동일 데이터 확인 |
 | Git 로컬 설정 | [ ] | 사용자 설정 존재, 기본 브랜치 `main` 확인 |
 | GitHub 원격 연결 | [ ] | 공개 저장소와 SSH 읽기 연결 확인 |
 | 민감정보 보호 | [ ] | 이메일 값 마스킹, 계정 없는 브라우저 프로필로 캡처 |
-| VS Code GitHub 로그인 캡처 | ⬜ | 사용자가 개인정보를 가린 화면을 추가해야 함 |
-| 최종 커밋·푸시 | ⬜ | 변경 파일 검토 후 `origin/main` 반영 필요 |
+| VS Code GitHub 로그인 캡처 | [ ] | 사용자가 개인정보를 가린 화면을 추가해야 함 |
 
-미완료 두 항목의 안전한 수행 순서는 [사용자 확인이 필요한 마지막 증거](docs/evidence/manual-evidence.md)에 정리했습니다.
 
 ## 3. 검증 환경
 
@@ -150,7 +146,7 @@ $ ls terminal-practice
 original.txt
 ```
 
-## 6. 파일 권환
+## 6. 파일 권한
 
 `chmod`는 **change mode**의 약자로, 파일이나 디렉터리의 접근 권한을 변경하는 명령어입니다.
 
@@ -202,7 +198,7 @@ $ ls -l terminal-practice/original.txt
 -rw-r-----@ 1 myu  wheel  0 Jul 28 16:49 terminal-practice/original.txt
 ```
 
-### 절대 경로화 상대경로 
+### 절대 경로와 상대경로 
 | 구분 | 의미 | 예시 |
 |---|---|---|
 | **절대 경로** | 최상위 위치부터 시작하는 전체 주소 | `/Users/me/Documents/test.txt` |
