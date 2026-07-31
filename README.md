@@ -66,18 +66,17 @@ git version 2.53.0
 ## 4. 프로젝트 구조
 
 ```text
-.
 ├── Dockerfile                    # NGINX 커스텀 이미지
 ├── compose.yaml                  # 선택 과제: 단일 web 서비스와 이름 있는 볼륨
 ├── nginx/default.conf            # 정적 라우팅, /healthz, 보안 헤더
-├── images/                      # 검증 사진
+├── images/                       # 검증 사진
 ├── site/
 │   ├── index.html                # Docker Workstation Lab 화면
 │   ├── styles.css                # 데스크톱·모바일 반응형 스타일
 │   └── data/welcome.txt          # 볼륨 연결 대상의 초기 파일
-├── scripts/
-│   ├── terminal_permissions.sh   # CLI와 파일·디렉터리 권한 실습
-│   └── verify.sh                 # Docker 전체 통합 검증과 자동 정리
+├── backend/
+│   ├── Dockerfile                # 서버 설정
+│   └── server.py                 # 간단한 기본 서버 설정
 └── README.md                     # 프로젝트 전체 워크플로우
 ``` 
 
@@ -611,9 +610,6 @@ Server: nginx/1.27.5
 ok
 ```
 
-![127.0.0.1:38082 포트 매핑 접속 성공](images/browser-address-bar.png)
-
-
 #### EXPOSE와 -p의 차이
 | 구분 | 역할 |
 |---|---|
@@ -770,7 +766,7 @@ $ docker run -v volume-data:/data my-image
 | 주요 사용 예시 | 개발 소스, 설정 파일, 로그 확인 | DB 데이터, 업로드 파일, 애플리케이션 데이터 |
 
 
-## 9 Docker compose 
+## 9. Docker compose 
 여러개의 도커 파일들들과 컨테이너들의 구조들을 쉽게 구성하게 도와준다. 각각의 도커 컨테이너들을 직접 수행하게 되면 
 
 ``` bash
