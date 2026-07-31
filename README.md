@@ -36,7 +36,7 @@
 | Git                 | 2.50.1 (Apple Git-155)                 | `git --version`                                                                    |
 | Git 기본 브랜치          | `main`                                 | `git config --global init.defaultBranch`                                           |
 
-전체 원문은 [환경 검증 로그](docs/evidence/environment.md)에 있습니다.
+
 
 ```bash
 $ sw_vers
@@ -70,6 +70,7 @@ git version 2.53.0
 ├── Dockerfile                    # NGINX 커스텀 이미지
 ├── compose.yaml                  # 선택 과제: 단일 web 서비스와 이름 있는 볼륨
 ├── nginx/default.conf            # 정적 라우팅, /healthz, 보안 헤더
+├── images/                      # 검증 사진
 ├── site/
 │   ├── index.html                # Docker Workstation Lab 화면
 │   ├── styles.css                # 데스크톱·모바일 반응형 스타일
@@ -250,8 +251,13 @@ git push -u origin main
 
 # 연동 검증
 git remote -v
+origin  https://github.com/Minkyu01/codyssey_01.git (fetch)
+origin  https://github.com/Minkyu01/codyssey_01.git (push)
 git status
 ```
+
+- github 연결 화면
+![127.0.0.1:38082 포트 매핑 접속 성공](images/github_auth.png)
 
 
 #### http, ssh 방식
@@ -552,6 +558,8 @@ codyssey_01-backend-1   codyssey_01-backend   backend   Up                      
 workstation-web         workstation-web:1.0   web       Up (healthy)              0.0.0.0:38082->80/tcp
 ```
 
+## 브라우저 접속 화면
+
 - curl로 테스트 및 접속 결과
 
 ```bash
@@ -562,8 +570,6 @@ Content-Type: text/plain
 
 ok
 ```
-
-## 브라우저 접속 화면
 
 ![127.0.0.1:38082 포트 매핑 접속 성공](images/browser-address-bar.png)
 
@@ -616,11 +622,19 @@ ok
 
 
 
-
-
 #### Docker 볼륨 영속성 검증
-Docker 볼륨이란?
-Docker 볼륨은 컨테이너의 데이터를 컨테이너 외부에 저장하는 공간입니다
+바인드 마운트: 내가 관리하는 호스트 폴더를 연결
+Docker 볼륨: Docker가 관리하는 저장 공간을 연결
+
+| 구분 | 바인드 마운트 | Docker 볼륨 |
+|---|---|---|
+| 저장 공간 주인 | 사용자 | Docker |
+| 연결 대상 | 호스트의 실제 경로 | Docker가 만든 볼륨 이름 |
+| 예시 | `./src`, `/Users/me/data` | `db-data`, `app-data` |
+| 주요 용도 | 소스 코드·설정 파일 공유 | DB·업로드 파일 등 데이터 보존 |
+| 호스트에서 파일 수정 | 쉽고 일반적 | 직접 수정하지 않는 것이 일반적 |
+| 다른 컴퓨터에서 실행 | 호스트 경로가 달라질 수 있음 | 같은 이름으로 다시 생성·연결 가능 |
+| Docker 명령으로 관리 | 어려움 | 생성·조회·삭제 가능 |
 
 ``` bash
 컨테이너의 /data
@@ -736,7 +750,25 @@ $ docker run --rm \
   alpine \
   cat /data/message.txt
 Docker volume persistence test
+
+# 바인드 마운트 -> 호스트 경로만 붙여주면 됨
+$ docker run -v "$(pwd)/src:/app" my-image
+
+# Docker 볼륨
+$ docker run -v volume-data:/data my-image
+왼쪽에 볼륨 이름이 있으므로 볼륨 마운트다.
 ```
+
+#### 바인드 마운트와 Docker 볼륨 비교
+
+| 구분 | 바인드 마운트 | Docker 볼륨 |
+|---|---|---|
+| 저장 위치 | 사용자가 지정한 호스트 경로 | Docker가 관리하는 저장 공간 |
+| 주요 목적 | 소스 코드와 설정 파일의 실시간 반영 | 컨테이너 데이터의 영속적 저장 |
+| 호스트에서 접근 | 직접 접근하기 쉽다. | Docker 명령으로 관리하는 것이 일반적이다. |
+| 컨테이너 삭제 시 | 호스트 파일은 유지된다. | 볼륨과 데이터는 유지된다. |
+| 주요 사용 예시 | 개발 소스, 설정 파일, 로그 확인 | DB 데이터, 업로드 파일, 애플리케이션 데이터 |
+
 
 ## 9 Docker compose 
 여러개의 도커 파일들들과 컨테이너들의 구조들을 쉽게 구성하게 도와준다. 각각의 도커 컨테이너들을 직접 수행하게 되면 
@@ -857,12 +889,60 @@ HOST_PORT=18080 docker compose ps
 HOST_PORT=18080 docker compose down
 ```
 
-
-
-
 ## 10. 트러블슈팅
 
-실제 관찰한 두 사례를 [트러블슈팅 기록](docs/troubleshooting.md)에 문제 → 원인 가설 → 확인 → 해결 → 재검증 순서로 남겼습니다.
 
-1. `docker ps`에는 보이지 않는 중지 컨테이너가 이미지를 참조해 이미지 삭제가 실패했습니다. `docker ps -a`로 대상을 확인하고 해당 컨테이너만 삭제한 뒤 해결했습니다.
-2. 컨테이너 ID가 반환된 직후 `curl`이 종료 코드 52를 반환했습니다. 프로세스 시작과 서비스 준비 완료가 다름을 확인하고 `/healthz`에 제한 시간이 있는 재시도를 적용했습니다.
+#### 트러블슈팅 1. Docker 이미지 삭제 실패
+
+| 구분 | 내용 |
+|---|---|
+| 문제 발생 | Docker 이미지를 삭제하려 했지만, 해당 이미지를 사용하는 컨테이너가 있다는 오류가 발생했다. `docker ps`에서는 관련 컨테이너가 보이지 않았다. |
+| 원인 가설 | 실행 중인 컨테이너는 없지만, 중지된 컨테이너가 해당 이미지를 참조하고 있을 것으로 예상했다. |
+| 원인 확인 | `docker ps -a`를 실행해 중지된 컨테이너를 확인했다. 해당 컨테이너가 삭제하려는 이미지를 참조하고 있었다. |
+| 해결 방안 | 이미지를 참조하는 중지 컨테이너만 삭제한 후 이미지를 다시 삭제했다. |
+| 재검증 | `docker ps -a`와 `docker images`를 실행해 대상 컨테이너와 이미지가 정상적으로 삭제되었는지 확인했다. |
+| 공부한 내용 | `docker ps`는 실행 중인 컨테이너만 보여주고, `docker ps -a`는 중지된 컨테이너까지 보여준다. 중지된 컨테이너도 이미지를 참조하므로 이미지 삭제를 방해할 수 있다. 강제 삭제보다 참조 관계를 먼저 확인하고 필요한 대상만 삭제하는 것이 안전하다. |
+
+### 사용한 명령어
+
+~~~bash
+# 중지된 컨테이너를 포함해 전체 컨테이너 확인
+docker ps -a
+
+# 이미지를 참조하는 컨테이너 삭제
+docker rm <CONTAINER_ID>
+
+# 이미지 삭제
+docker rmi <IMAGE_ID>
+
+# 삭제 결과 확인
+docker ps -a
+docker images
+~~~
+
+---
+
+#### 트러블슈팅 2. 포트 충돌로 컨테이너 실행 실패
+
+| 구분 | 내용 |
+|---|---|
+| 문제 발생 | 컨테이너 실행 시 `port is already allocated` 오류가 발생했다. |
+| 원인 파악 | 다른 컨테이너가 동일한 호스트 포트를 사용하고 있었다. |
+| 확인 방법 | `docker ps`로 실행 중인 컨테이너와 사용 중인 포트를 확인했다. |
+| 해결 방안 | 기존 컨테이너를 중지하거나 새로운 포트로 변경해 실행했다. |
+| 재검증 | `docker ps`로 실행 상태를 확인하고 변경한 포트로 접속했다. |
+| 공부한 내용 | 하나의 호스트 포트는 여러 컨테이너가 동시에 사용할 수 없다. `-p 호스트포트:컨테이너포트`에서 앞쪽 숫자가 호스트 포트다. |
+
+### 사용한 명령어
+
+~~~bash
+# 사용 중인 포트 확인
+docker ps
+
+# 다른 호스트 포트로 실행
+docker run -d -p 8081:8080 <IMAGE_NAME>
+
+# 실행 및 접속 확인
+docker ps
+curl http://localhost:8081
+~~~
